@@ -1,20 +1,19 @@
-import { prisma } from '../utils/prisma';
-import { ProductFilters } from '../types';
+import { prisma } from "../utils/prisma";
+import { ProductFilters } from "../types";
 
 export const getProducts = async (filter: ProductFilters) => {
-  const { 
-    minPrice, 
-    maxPrice, 
-    search, 
-    sortBy, 
-    sortOrder, 
-    page = 1, 
-    limit = 10 
+  const {
+    minPrice,
+    maxPrice,
+    search,
+    sortBy,
+    sortOrder,
+    page = 1,
+    limit = 10,
   } = filter;
 
   const where: any = {};
 
-  // Filtro por preço
   if (minPrice !== undefined || maxPrice !== undefined) {
     where.price = {};
     if (minPrice !== undefined) {
@@ -25,36 +24,32 @@ export const getProducts = async (filter: ProductFilters) => {
     }
   }
 
-  // Filtro por busca (name e description)
   if (search && search.trim()) {
     where.OR = [
       {
         name: {
           contains: search,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
       },
       {
         description: {
           contains: search,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
       },
     ];
   }
 
-  // Paginação
   const skip = (Number(page) - 1) * Number(limit);
   const take = Number(limit);
 
-  // Ordenação
   const orderBy: any = {};
   if (sortBy) {
-    orderBy[sortBy] = sortOrder || 'asc';
+    orderBy[sortBy] = sortOrder || "asc";
   }
 
   try {
-    // Buscar produtos com filtros
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
@@ -73,7 +68,7 @@ export const getProducts = async (filter: ProductFilters) => {
       totalPages: Math.ceil(total / limit),
     };
   } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
+    console.error("Erro ao buscar produtos:", error);
     throw error;
   }
 };
