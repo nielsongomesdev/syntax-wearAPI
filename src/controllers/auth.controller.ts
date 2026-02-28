@@ -1,10 +1,17 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { loginUser, registerUser } from "../services/auth.service";
 import { AuthRequest, RegisterRequest } from "../types";
-import { request } from "node:http";
+import { loginSchema, registerSchema } from "../utils/validator";
 
 export const register = async (request: FastifyRequest,reply: FastifyReply,) => {
-  const user = await registerUser(request.body as RegisterRequest);
+
+  const validation = registerSchema.safeParse(request.body as RegisterRequest);
+
+  if (!validation.success) {
+    throw validation.error;
+  }
+
+  const user = await registerUser(validation.data);
 
   const token = request.server.jwt.sign({ userId: user.id });
 
@@ -15,10 +22,19 @@ export const register = async (request: FastifyRequest,reply: FastifyReply,) => 
 };
 
 export const login = async (request: FastifyRequest<{Body:AuthRequest}>, reply: FastifyReply) => {
-	const user = await loginUser(request.body);
+
+
+  const validation = loginSchema.safeParse(request.body as AuthRequest);
+
+  if (!validation.success) {
+    throw validation.error;
+  }
+
+	const user = await loginUser(validation.data);
 
 	const token = request.server.jwt.sign({ userId: user.id });
-	reply.send({
+  
+	reply.status(200).send({
 		user,
 		token,
 	})

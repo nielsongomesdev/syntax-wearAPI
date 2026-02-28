@@ -18,5 +18,17 @@ export interface RegisterRequest extends AuthRequest {
     lastName: string;
     cpf?: string;
     dateOfBirth?: string;
-    phone?: string; 
+    phone?: string;
+}
+
+export interface CreateProduct {
+    name: string;
+    description: string;
+    price: number;
+    colors?: string[];
+    sizes?: string[];
+    slug: string;
+    stock: number;
+    active: boolean;
+    images?: string[];
 }
