@@ -83,21 +83,19 @@ export const getProductById = async (id: number) => {
 };
 
 export const createProduct = async (data: CreateProduct) => {
-
 	const existingProduct = await prisma.product.findUnique({
 		where: { slug: data.slug },
 	});
 
-	if(existingProduct){
+	if (existingProduct) {
 		throw new Error("Slug já existe. Escolha outro nome para o produto.");
 	}
 
-	const newProduct = await prisma.product.create({data});
+	const newProduct = await prisma.product.create({ data });
 	return newProduct;
-}
+};
 
 export const updateProduct = async (id: number, data: UpdateProduct) => {
-
 	const existingProduct = await prisma.product.findUnique({
 		where: { id },
 	});
@@ -106,12 +104,12 @@ export const updateProduct = async (id: number, data: UpdateProduct) => {
 		throw new Error("Produto não encontrado");
 	}
 
-	if(data.slug){
+	if (data.slug) {
 		const slugExists = await prisma.product.findUnique({
 			where: { slug: data.slug },
 		});
 
-		if(slugExists && slugExists.id !== id){
+		if (slugExists && slugExists.id !== id) {
 			throw new Error("Slug já existe. Escolha outro nome para o produto.");
 		}
 	}
@@ -122,4 +120,19 @@ export const updateProduct = async (id: number, data: UpdateProduct) => {
 	});
 
 	return updatedProduct;
-}
+};
+
+export const deleteProduct = async (id: number) => {
+	const existingProduct = await prisma.product.findUnique({
+		where: { id },
+	});
+
+	if(!existingProduct) {
+		throw new Error("Produto não encontrado");
+	}
+
+	await prisma.product.update({
+		where: { id },
+		data: { active: false },
+	});
+};
