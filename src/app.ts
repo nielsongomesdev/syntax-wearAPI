@@ -1,16 +1,13 @@
-// Require the framework and instantiate it
-
-// ESM
-import Fastify, { FastifyError } from "fastify";
+import Fastify from "fastify";
 import "dotenv/config";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import productRoutes from "./routes/products.routes";
+import categoryRoutes from "./routes/categories.routes";
 import swagger from "@fastify/swagger";
 import scalar from "@scalar/fastify-api-reference";
 import jwt from "@fastify/jwt";
 import authRoutes from "./routes/auth.routes";
-import z, { ZodError } from "zod";
 import { errorHandler } from "./middlewares/error.middleware";
 
 const PORT = parseInt(process.env.PORT ?? "3000");
@@ -20,7 +17,7 @@ const fastify = Fastify({
 });
 
 fastify.register(jwt, {
-  secret: process.env.JWT_SECRET!
+	secret: process.env.JWT_SECRET!
 });
 
 fastify.register(cors, {
@@ -67,10 +64,10 @@ fastify.register(scalar, {
 });
 
 fastify.register(productRoutes, { prefix: "/products" });
+fastify.register(categoryRoutes, { prefix: "/categories" });
 fastify.register(authRoutes, { prefix: "/auth" });
 
-// Declare a route
-fastify.get("/", async (request, reply) => {
+fastify.get("/", async () => {
 	return {
 		message: "E-commerce Syntax Wear API",
 		version: "1.0.0",
@@ -78,7 +75,7 @@ fastify.get("/", async (request, reply) => {
 	};
 });
 
-fastify.get("/health", async (request, reply) => {
+fastify.get("/health", async () => {
 	return {
 		status: "ok",
 		timestamp: new Date().toISOString(),
@@ -87,13 +84,11 @@ fastify.get("/health", async (request, reply) => {
 
 fastify.setErrorHandler(errorHandler);
 
-// Run the server!
-fastify.listen({ port: PORT }, function (err, address) {
+fastify.listen({ port: PORT }, function (err) {
 	if (err) {
 		fastify.log.error(err);
 		process.exit(1);
 	}
-	// Server is now listening on ${address}
 });
 
 export default fastify;
