@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { createNewProduct, getProduct, listProducts, updateExistingProduct, deleteExistingProduct } from "../controllers/products.controller";
 import { authenticate } from "../middlewares/auth.middleware";
-import { create } from "domain";
+import { requireAdmin } from "../middlewares/admin.middleware";
+import { CreateProduct, UpdateProduct } from "../types";
 
 export default async function productRoutes(fastify: FastifyInstance) {
-	fastify.addHook("onRequest", authenticate);
 	fastify.get(
 		"/",
 		{
@@ -14,21 +14,42 @@ export default async function productRoutes(fastify: FastifyInstance) {
 				response: {
 					200: {
 						description: "Lista de produtos",
-						type: "array",
-						items: {
-							type: "object",
-							properties: {
-								id: { type: "string" },
-								name: { type: "string" },
-								description: { type: "string" },
-								price: { type: "number" },
-								colors: {
-									type: "array",
-									items: { type: "string" },
+						type: "object",
+						properties: {
+							data: {
+								type: "array",
+								items: {
+									type: "object",
+									properties: {
+										id: { type: "number" },
+										name: { type: "string" },
+										description: { type: "string" },
+										price: { type: "number" },
+										colors: {
+											type: "array",
+											items: { type: "string" },
+										},
+										sizes: {
+											type: "array",
+											items: { type: "string" },
+										},
+										images: {
+											type: "array",
+											items: { type: "string" },
+										},
+										slug: { type: "string" },
+										stock: { type: "number" },
+										active: { type: "boolean" },
+										categoryId: { type: "number" },
+										createdAt: { type: "string" },
+										updatedAt: { type: "string" },
+									},
 								},
-								createdAt: { type: "string", format: "date-time" },
-								updatedAt: { type: "string", format: "date-time" },
 							},
+							total: { type: "number" },
+							page: { type: "number" },
+							limit: { type: "number" },
+							totalPages: { type: "number" },
 						},
 					},
 					400: {
@@ -54,6 +75,7 @@ export default async function productRoutes(fastify: FastifyInstance) {
 						minPrice: { type: "number" },
 						maxPrice: { type: "number" },
 						search: { type: "string" },
+						categoryId: { type: "number" },
 						sortBy: { type: "string", enum: ["price", "name", "createdAt"] },
 						sortOrder: { type: "string", enum: ["asc", "desc"] },
 					},
@@ -103,6 +125,14 @@ export default async function productRoutes(fastify: FastifyInstance) {
 							slug: { type: "string" },
 							active: { type: "boolean" },
 							updatedAt: { type: "string", format: "date-time" },
+							categoryId: { type: "number"},
+							category: {
+								type: "object",
+								properties: {
+									id: { type: "number" },
+									name: { type: "string" },
+								},
+							},
 						},
 					},
 					400: {
@@ -125,20 +155,23 @@ export default async function productRoutes(fastify: FastifyInstance) {
 		getProduct
 	);
 
-	fastify.post(
+	fastify.post<{ Body: CreateProduct }>(
 		"/",
 		{
+			onRequest: [requireAdmin], // Requer autenticação + role ADMIN
 			schema: {
 				tags: ["Products"],
 				description: "Criar um novo produto",
 				body: {
 					type: "object",
-					required: ["name", "description", "price"],
+					required: ["name", "description", "price", "categoryId"],
 					properties: {
 						name: { type: "string", description: "Nome do produto" },
 						description: { type: "string", description: "Descrição do produto" },
 						price: { type: "number", description: "Preço do produto" },
+						categoryId: { type: "number", description: "ID da categoria do produto" },
 						stock: { type: "number", description: "Quantidade em estoque" },
+						active: { type: "boolean", description: "Produto ativo" },
 						colors: {
 							type: "array",
 							items: { type: "string" },
@@ -185,9 +218,10 @@ export default async function productRoutes(fastify: FastifyInstance) {
 		createNewProduct
 	);
 
-	fastify.put(
+	fastify.put<{ Body: UpdateProduct; Params: { id: string } }>(
 		"/:id",
 		{
+			onRequest: [requireAdmin], // Requer autenticação + role ADMIN
 			schema: {
 				tags: ["Products"],
 				description: "Atualizar produto",
@@ -205,6 +239,7 @@ export default async function productRoutes(fastify: FastifyInstance) {
 						name: { type: "string" },
 						description: { type: "string" },
 						price: { type: "number" },
+						categoryId: { type: "number" },
 						active: { type: "boolean" },
 						stock: { type: "number" },
 						colors: {
@@ -263,9 +298,10 @@ export default async function productRoutes(fastify: FastifyInstance) {
 		updateExistingProduct
 	);
 
-	fastify.delete(
+	fastify.delete<{ Params: { id: number } }>(
 		"/:id",
 		{
+			onRequest: [requireAdmin], // Requer autenticação + role ADMIN
 			schema: {
 				tags: ["Products"],
 				description: "Deletar um produto",

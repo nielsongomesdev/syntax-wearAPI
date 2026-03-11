@@ -1,7 +1,7 @@
 import { OrderFilters, CreateOrder, UpdateOrder } from '../types'
 import { prisma } from '../utils/prisma'
 
-export async function getOrders(filters: OrderFilters = {}) {
+export async function getOrders(filters: OrderFilters = {}, requestingUserId: any, isAdmin: boolean) {
   const page = filters.page || 1
   const limit = filters.limit || 10
   const skip = (page - 1) * limit
@@ -64,7 +64,7 @@ export async function getOrders(filters: OrderFilters = {}) {
   }
 }
 
-export async function getOrderById(id: number) {
+export async function getOrderById(id: number, requestingUserId: any, isAdmin: boolean) {
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
@@ -193,7 +193,7 @@ export async function createOrder(data: CreateOrder) {
   return order
 }
 
-export async function updateOrder(id: number, data: UpdateOrder) {
+export async function updateOrder(id: number, data: UpdateOrder, requestingUserId: any, isAdmin: boolean) {
   // Verificar se pedido existe
   const existingOrder = await prisma.order.findUnique({
     where: { id },
@@ -236,7 +236,7 @@ export async function updateOrder(id: number, data: UpdateOrder) {
   return updatedOrder
 }
 
-export async function cancelOrder(id: number) {
+export async function cancelOrder(id: number, requestingUserId: any, isAdmin: boolean) {
   // Verificar se pedido existe
   const existingOrder = await prisma.order.findUnique({
     where: { id },

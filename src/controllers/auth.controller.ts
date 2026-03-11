@@ -9,7 +9,7 @@ export const register = async (request: FastifyRequest,reply: FastifyReply,) => 
 
   if (!validation.success) {
     throw validation.error;
-  }
+  } 
 
   const user = await registerUser(validation.data);
 
